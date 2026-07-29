@@ -210,6 +210,26 @@
 
   <!-- DASHBOARD -->
   <div class="tabview active" id="tab-dashboard">
+    <div class="filters">
+      <select id="dashMes">
+        <option value="">Todos os meses</option>
+        <option value="0">Janeiro</option>
+        <option value="1">Fevereiro</option>
+        <option value="2">Março</option>
+        <option value="3">Abril</option>
+        <option value="4">Maio</option>
+        <option value="5">Junho</option>
+        <option value="6">Julho</option>
+        <option value="7">Agosto</option>
+        <option value="8">Setembro</option>
+        <option value="9">Outubro</option>
+        <option value="10">Novembro</option>
+        <option value="11">Dezembro</option>
+      </select>
+      <select id="dashAno">
+        <option value="">Todos os anos</option>
+      </select>
+    </div>
     <div class="kpi-grid" id="kpiGrid"></div>
     <div class="chart-wrap">
       <div class="chart-title">Evolução da nota média por shopping</div>
@@ -393,6 +413,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 
 <script type="module">
   const firebaseConfig = {
@@ -409,6 +430,7 @@
 
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  Chart.register(ChartDataLabels);
   const auth = firebase.auth();
 
   const SHOPPINGS = ["Sul", "Leste", "Sto. André", "Nações Unidas"];
@@ -455,6 +477,7 @@
     setupForm();
     setupHistorico();
     setupEditModal();
+    setupDashboardFiltro();
     renderAll();
   }
 
@@ -475,6 +498,36 @@
     });
   }
 
+  function setupDashboardFiltro(){
+    document.getElementById('dashMes').addEventListener('change', renderAll);
+    document.getElementById('dashAno').addEventListener('change', renderAll);
+  }
+
+  let anosPopulados = false;
+  function popularFiltroAno(all){
+    if(anosPopulados) return;
+    const anos = [...new Set(all.map(o=>o.data.slice(0,4)))].sort();
+    if(anos.length === 0) return;
+    const sel = document.getElementById('dashAno');
+    anos.forEach(ano=>{
+      const opt = document.createElement('option');
+      opt.value = ano; opt.textContent = ano;
+      sel.appendChild(opt);
+    });
+    anosPopulados = true;
+  }
+
+  function filtrarPorMesAno(all){
+    const mes = document.getElementById('dashMes').value;
+    const ano = document.getElementById('dashAno').value;
+    return all.filter(o=>{
+      const [y, m] = o.data.split('-');
+      if(ano && y !== ano) return false;
+      if(mes !== '' && (parseInt(m,10)-1) !== parseInt(mes,10)) return false;
+      return true;
+    });
+  }
+
   async function fetchAll(){
     const snap = await db.collection(COL).orderBy('data', 'asc').get();
     return snap.docs.map(d=>({id:d.id, ...d.data()}));
@@ -482,11 +535,13 @@
 
   async function renderAll(){
     const all = await fetchAll();
-    renderKPIs(all);
-    renderLineChart(all);
-    renderBarChart(all);
-    renderInteracoesKPIs(all);
-    renderInteracoesCharts(all);
+    popularFiltroAno(all);
+    const filtrado = filtrarPorMesAno(all);
+    renderKPIs(filtrado);
+    renderLineChart(filtrado);
+    renderBarChart(filtrado);
+    renderInteracoesKPIs(filtrado);
+    renderInteracoesCharts(filtrado);
     renderHistorico(all);
   }
 
@@ -560,10 +615,18 @@
       options: {
         responsive: true,
         scales: {
-          y: { min:0, max:5, ticks:{color:'#9a9a92'}, grid:{color:'#2c2c2c'} },
-          x: { ticks:{color:'#9a9a92'}, grid:{color:'#2c2c2c'} }
+          y: { min:0, max:5, ticks:{color:'#9a9a92'}, grid:{display:false} },
+          x: { ticks:{color:'#9a9a92'}, grid:{display:false} }
         },
-        plugins: { legend: { labels:{color:'#f5f5f0', font:{family:'Inter'}} } }
+        plugins: {
+          legend: { labels:{color:'#f5f5f0', font:{family:'Inter'}} },
+          datalabels: {
+            align:'top', anchor:'end',
+            color: (ctx)=> ctx.dataset.borderColor,
+            font: {weight:'bold', size:10},
+            formatter: (v)=> v !== null ? v.toFixed(1) : ''
+          }
+        }
       }
     });
   }
@@ -591,12 +654,17 @@
       options: {
         responsive: true,
         scales: {
-          y: { min:0, max:5, ticks:{color:'#9a9a92'}, grid:{color:'#2c2c2c'} },
+          y: { min:0, max:5, ticks:{color:'#9a9a92'}, grid:{display:false} },
           x: { ticks:{color:'#9a9a92'}, grid:{display:false} }
         },
         plugins: {
           legend: { display:false },
-          annotation: {}
+          datalabels: {
+            align:'top', anchor:'end',
+            color:'#f5f5f0',
+            font:{weight:'bold', size:12},
+            formatter: (v)=> v.toFixed(1)
+          }
         }
       }
     });
@@ -657,10 +725,18 @@
         options: {
           responsive: true,
           scales: {
-            y: { beginAtZero:true, ticks:{color:'#9a9a92'}, grid:{color:'#2c2c2c'} },
-            x: { ticks:{color:'#9a9a92'}, grid:{color:'#2c2c2c'} }
+            y: { beginAtZero:true, ticks:{color:'#9a9a92'}, grid:{display:false} },
+            x: { ticks:{color:'#9a9a92'}, grid:{display:false} }
           },
-          plugins: { legend: { labels:{color:'#f5f5f0', font:{family:'Inter'}, boxWidth:10, font:{size:10}} } }
+          plugins: {
+            legend: { labels:{color:'#f5f5f0', font:{family:'Inter', size:10}, boxWidth:10} },
+            datalabels: {
+              align:'top', anchor:'end',
+              color: (ctx)=> ctx.dataset.borderColor,
+              font: {weight:'bold', size:9},
+              formatter: (v)=> v !== null ? v : ''
+            }
+          }
         }
       });
     });
