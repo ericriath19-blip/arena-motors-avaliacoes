@@ -163,6 +163,16 @@
     .kpi-grid{grid-template-columns:1fr;}
     header.top h1{font-size:20px;}
   }
+
+  .interacoes-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+  .interacoes-grid .chart-wrap{margin-bottom:20px;}
+  .interacoes-kpi.kpi-grid{margin-bottom:16px;}
+  .interacoes-kpi .kpi-card{padding:14px;}
+  .interacoes-kpi .kpi-nota{font-size:1.5rem;}
+  @media (max-width:900px){
+    .interacoes-grid{grid-template-columns:1fr;}
+    .interacoes-kpi.kpi-grid{grid-template-columns:repeat(2,1fr) !important;}
+  }
 </style>
 </head>
 <body>
@@ -209,6 +219,16 @@
       <div class="chart-title">Nota atual por shopping (piso de referência: <span id="thresholdLabel">4.5</span>)</div>
       <canvas id="chartBarra" height="90"></canvas>
     </div>
+
+    <h3 style="margin:8px 0 16px;color:var(--gold);font-size:1.1rem;">Interações no Perfil da Empresa (Google)</h3>
+    <div class="kpi-grid interacoes-kpi" id="interacoesKpiGrid" style="grid-template-columns:repeat(5,1fr);"></div>
+    <div class="interacoes-grid">
+      <div class="chart-wrap"><div class="chart-title">Chamadas</div><canvas id="chartChamadas" height="110"></canvas></div>
+      <div class="chart-wrap"><div class="chart-title">Cliques no chat</div><canvas id="chartChat" height="110"></canvas></div>
+      <div class="chart-wrap"><div class="chart-title">Agendamentos</div><canvas id="chartAgendamentos" height="110"></canvas></div>
+      <div class="chart-wrap"><div class="chart-title">Orientações (como chegar)</div><canvas id="chartOrientacoes" height="110"></canvas></div>
+      <div class="chart-wrap"><div class="chart-title">Cliques no website</div><canvas id="chartWebsite" height="110"></canvas></div>
+    </div>
   </div>
 
   <!-- LANÇAR -->
@@ -240,6 +260,34 @@
           <input type="number" id="fTotal" min="0" step="1" placeholder="Ex: 312">
         </div>
       </div>
+
+      <h3 style="margin:26px 0 14px;font-size:1rem;color:var(--gold);">Interações no Perfil da Empresa (Google)</h3>
+      <p style="font-size:.78rem;color:var(--muted);margin:-8px 0 16px;">Dados do painel "Perfil da Empresa" do Google — preencha com o total do período que você está aferindo (opcional, pode deixar em branco).</p>
+      <div class="form-grid">
+        <div class="field">
+          <label>Chamadas</label>
+          <input type="number" id="fChamadas" min="0" step="1" placeholder="0">
+        </div>
+        <div class="field">
+          <label>Cliques no chat</label>
+          <input type="number" id="fCliquesChat" min="0" step="1" placeholder="0">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Agendamentos</label>
+          <input type="number" id="fAgendamentos" min="0" step="1" placeholder="0">
+        </div>
+        <div class="field">
+          <label>Orientações (como chegar)</label>
+          <input type="number" id="fOrientacoes" min="0" step="1" placeholder="0">
+        </div>
+      </div>
+      <div class="field">
+        <label>Cliques no website</label>
+        <input type="number" id="fCliquesWebsite" min="0" step="1" placeholder="0">
+      </div>
+
       <div class="field">
         <label>Observações</label>
         <textarea id="fObs" placeholder="Ex: avaliação negativa sobre atendimento, resposta pendente..."></textarea>
@@ -264,7 +312,7 @@
       <div style="overflow-x:auto;">
         <table>
           <thead>
-            <tr><th>Data</th><th>Shopping</th><th>Nota</th><th>Total avaliações</th><th>Variação</th><th>Obs.</th><th></th></tr>
+            <tr><th>Data</th><th>Shopping</th><th>Nota</th><th>Aval.</th><th>Variação</th><th>Cham.</th><th>Chat</th><th>Agend.</th><th>Orient.</th><th>Site</th><th>Obs.</th><th></th></tr>
           </thead>
           <tbody id="histBody"></tbody>
         </table>
@@ -308,6 +356,30 @@
         <input type="number" id="eTotal" min="0" step="1">
       </div>
     </div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Chamadas</label>
+        <input type="number" id="eChamadas" min="0" step="1">
+      </div>
+      <div class="field">
+        <label>Cliques no chat</label>
+        <input type="number" id="eCliquesChat" min="0" step="1">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Agendamentos</label>
+        <input type="number" id="eAgendamentos" min="0" step="1">
+      </div>
+      <div class="field">
+        <label>Orientações</label>
+        <input type="number" id="eOrientacoes" min="0" step="1">
+      </div>
+    </div>
+    <div class="field">
+      <label>Cliques no website</label>
+      <input type="number" id="eCliquesWebsite" min="0" step="1">
+    </div>
     <div class="field">
       <label>Observações</label>
       <textarea id="eObs"></textarea>
@@ -349,6 +421,14 @@
 
   let lineChart = null;
   let barChart = null;
+  const interChartInstances = {};
+  const METRICAS_INTERACAO = [
+    {key:'chamadas', label:'Chamadas', canvas:'chartChamadas'},
+    {key:'cliquesChat', label:'Cliques no chat', canvas:'chartChat'},
+    {key:'agendamentos', label:'Agendamentos', canvas:'chartAgendamentos'},
+    {key:'orientacoes', label:'Orientações', canvas:'chartOrientacoes'},
+    {key:'cliquesWebsite', label:'Cliques no website', canvas:'chartWebsite'}
+  ];
 
   // ---------- LOGIN ----------
   window.doLogin = async function(){
@@ -405,6 +485,8 @@
     renderKPIs(all);
     renderLineChart(all);
     renderBarChart(all);
+    renderInteracoesKPIs(all);
+    renderInteracoesCharts(all);
     renderHistorico(all);
   }
 
@@ -520,9 +602,78 @@
     });
   }
 
+  // ---------- INTERAÇÕES NO PERFIL (Google) ----------
+  function renderInteracoesKPIs(all){
+    const grid = document.getElementById('interacoesKpiGrid');
+    grid.innerHTML = '';
+    const datas = [...new Set(all.map(o=>o.data))].sort();
+    const ultimaData = datas[datas.length-1];
+    const penultimaData = datas[datas.length-2];
+
+    METRICAS_INTERACAO.forEach(m=>{
+      const totalAtual = all.filter(o=>o.data === ultimaData).reduce((s,o)=> s + (o[m.key]||0), 0);
+      const totalAnterior = penultimaData ? all.filter(o=>o.data === penultimaData).reduce((s,o)=> s + (o[m.key]||0), 0) : null;
+
+      const card = document.createElement('div');
+      card.className = 'kpi-card';
+      let deltaHtml = '';
+      if(totalAnterior !== null){
+        const diff = totalAtual - totalAnterior;
+        const cls = diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat';
+        const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '—';
+        deltaHtml = `<div class="kpi-delta ${cls}">${arrow} ${Math.abs(diff)} vs. período anterior</div>`;
+      }
+      card.innerHTML = `
+        <div class="kpi-shop">${m.label}</div>
+        <div class="kpi-nota">${totalAtual}</div>
+        <div class="kpi-sub">Soma dos 4 shoppings${ultimaData ? ' · ' + formatDataBR(ultimaData) : ''}</div>
+        ${deltaHtml}
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  function renderInteracoesCharts(all){
+    const datas = [...new Set(all.map(o=>o.data))].sort();
+    METRICAS_INTERACAO.forEach(m=>{
+      const ctx = document.getElementById(m.canvas);
+      const datasets = SHOPPINGS.map(shop=>{
+        const byDate = {};
+        all.filter(o=>o.shopping===shop).forEach(o=>{ byDate[o.data] = o[m.key] || 0; });
+        return {
+          label: shop,
+          data: datas.map(d => byDate[d] !== undefined ? byDate[d] : null),
+          borderColor: SHOP_COLOR[shop],
+          backgroundColor: SHOP_COLOR[shop],
+          spanGaps: true,
+          tension: 0.25,
+          pointRadius: 3,
+        };
+      });
+      if(interChartInstances[m.key]) interChartInstances[m.key].destroy();
+      interChartInstances[m.key] = new Chart(ctx, {
+        type: 'line',
+        data: { labels: datas.map(formatDataBR), datasets },
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero:true, ticks:{color:'#9a9a92'}, grid:{color:'#2c2c2c'} },
+            x: { ticks:{color:'#9a9a92'}, grid:{color:'#2c2c2c'} }
+          },
+          plugins: { legend: { labels:{color:'#f5f5f0', font:{family:'Inter'}, boxWidth:10, font:{size:10}} } }
+        }
+      });
+    });
+  }
+
   // ---------- FORM ----------
   function setupForm(){
     document.getElementById('btnSalvar').addEventListener('click', salvarAfericao);
+  }
+
+  function numOuZero(id){
+    const v = parseInt(document.getElementById(id).value, 10);
+    return isNaN(v) ? 0 : v;
   }
 
   async function salvarAfericao(){
@@ -532,6 +683,11 @@
     const notaMedia = parseFloat(document.getElementById('fNota').value);
     const totalAvaliacoes = parseInt(document.getElementById('fTotal').value, 10);
     const obs = document.getElementById('fObs').value.trim();
+    const chamadas = numOuZero('fChamadas');
+    const cliquesChat = numOuZero('fCliquesChat');
+    const agendamentos = numOuZero('fAgendamentos');
+    const orientacoes = numOuZero('fOrientacoes');
+    const cliquesWebsite = numOuZero('fCliquesWebsite');
 
     if(!data){ msg.style.color='var(--bad)'; msg.textContent='Selecione a data.'; return; }
     if(isNaN(notaMedia) || notaMedia < 0 || notaMedia > 5){ msg.style.color='var(--bad)'; msg.textContent='Nota inválida (use de 0 a 5).'; return; }
@@ -543,6 +699,7 @@
     try{
       await db.collection(COL).add({
         shopping, data, notaMedia, totalAvaliacoes, obs,
+        chamadas, cliquesChat, agendamentos, orientacoes, cliquesWebsite,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       msg.style.color = 'var(--good)';
@@ -550,6 +707,11 @@
       document.getElementById('fNota').value = '';
       document.getElementById('fTotal').value = '';
       document.getElementById('fObs').value = '';
+      document.getElementById('fChamadas').value = '';
+      document.getElementById('fCliquesChat').value = '';
+      document.getElementById('fAgendamentos').value = '';
+      document.getElementById('fOrientacoes').value = '';
+      document.getElementById('fCliquesWebsite').value = '';
       renderAll();
     }catch(e){
       msg.style.color = 'var(--bad)';
@@ -600,10 +762,15 @@
         <td>${o.notaMedia.toFixed(1)}</td>
         <td>${o.totalAvaliacoes}</td>
         <td>${variacaoTxt}</td>
-        <td style="max-width:180px;color:var(--muted);font-size:.8rem;">${o.obs || '—'}</td>
+        <td>${o.chamadas ?? '—'}</td>
+        <td>${o.cliquesChat ?? '—'}</td>
+        <td>${o.agendamentos ?? '—'}</td>
+        <td>${o.orientacoes ?? '—'}</td>
+        <td>${o.cliquesWebsite ?? '—'}</td>
+        <td style="max-width:160px;color:var(--muted);font-size:.8rem;">${o.obs || '—'}</td>
         <td></td>
       `;
-      const delTd = tr.children[6];
+      const delTd = tr.children[11];
       const wrap = document.createElement('div');
       wrap.className = 'row-actions';
 
@@ -645,6 +812,11 @@
     document.getElementById('eData').value = o.data;
     document.getElementById('eNota').value = o.notaMedia;
     document.getElementById('eTotal').value = o.totalAvaliacoes;
+    document.getElementById('eChamadas').value = o.chamadas || 0;
+    document.getElementById('eCliquesChat').value = o.cliquesChat || 0;
+    document.getElementById('eAgendamentos').value = o.agendamentos || 0;
+    document.getElementById('eOrientacoes').value = o.orientacoes || 0;
+    document.getElementById('eCliquesWebsite').value = o.cliquesWebsite || 0;
     document.getElementById('eObs').value = o.obs || '';
     document.getElementById('editMsg').textContent = '';
     document.getElementById('editModal').classList.add('show');
@@ -657,6 +829,11 @@
     const notaMedia = parseFloat(document.getElementById('eNota').value);
     const totalAvaliacoes = parseInt(document.getElementById('eTotal').value, 10);
     const obs = document.getElementById('eObs').value.trim();
+    const chamadas = parseInt(document.getElementById('eChamadas').value, 10) || 0;
+    const cliquesChat = parseInt(document.getElementById('eCliquesChat').value, 10) || 0;
+    const agendamentos = parseInt(document.getElementById('eAgendamentos').value, 10) || 0;
+    const orientacoes = parseInt(document.getElementById('eOrientacoes').value, 10) || 0;
+    const cliquesWebsite = parseInt(document.getElementById('eCliquesWebsite').value, 10) || 0;
 
     if(isNaN(notaMedia) || notaMedia < 0 || notaMedia > 5){ msg.style.color='var(--bad)'; msg.textContent='Nota inválida.'; return; }
     if(isNaN(totalAvaliacoes) || totalAvaliacoes < 0){ msg.style.color='var(--bad)'; msg.textContent='Total inválido.'; return; }
@@ -664,7 +841,10 @@
     msg.style.color = 'var(--muted)';
     msg.textContent = 'Salvando...';
     try{
-      await db.collection(COL).doc(editingId).update({shopping, data, notaMedia, totalAvaliacoes, obs});
+      await db.collection(COL).doc(editingId).update({
+        shopping, data, notaMedia, totalAvaliacoes, obs,
+        chamadas, cliquesChat, agendamentos, orientacoes, cliquesWebsite
+      });
       document.getElementById('editModal').classList.remove('show');
       renderAll();
     }catch(e){
