@@ -25,6 +25,11 @@
     --shop-leste:#1B4F91;
     --shop-stoandre:#B2CB1C;
     --shop-nacoes:#E0010F;
+    --recl-abordagem:#a78bfa;
+    --recl-preco:#f97316;
+    --recl-atendimento:#3b82f6;
+    --recl-propaganda:#ff6b4a;
+    --recl-qualidade:#eab308;
     --font-display:'Space Grotesk', sans-serif;
     --font-body:'Inter', sans-serif;
     --font-mono:'JetBrains Mono', monospace;
@@ -257,6 +262,12 @@
       <div class="chart-wrap"><div class="chart-title">Orientações (como chegar)</div><canvas id="chartOrientacoes" height="110"></canvas></div>
       <div class="chart-wrap"><div class="chart-title">Cliques no website</div><canvas id="chartWebsite" height="110"></canvas></div>
     </div>
+
+    <h3 style="margin:8px 0 16px;color:var(--gold);font-size:1.1rem;">Reclamações por shopping</h3>
+    <div class="chart-wrap">
+      <div class="chart-title">Distribuição percentual por tipo de reclamação</div>
+      <canvas id="chartReclamacoes" height="130"></canvas>
+    </div>
   </div>
 
   <!-- LANÇAR -->
@@ -314,6 +325,33 @@
       <div class="field">
         <label>Cliques no website</label>
         <input type="number" id="fCliquesWebsite" min="0" step="1" placeholder="0">
+      </div>
+
+      <h3 style="margin:26px 0 14px;font-size:1rem;color:var(--gold);">Reclamações</h3>
+      <p style="font-size:.78rem;color:var(--muted);margin:-8px 0 16px;">Quantidade de reclamações por tipo nesse período (opcional, pode deixar em branco).</p>
+      <div class="form-grid">
+        <div class="field">
+          <label>Abordagem</label>
+          <input type="number" id="fReclAbordagem" min="0" step="1" placeholder="0">
+        </div>
+        <div class="field">
+          <label>Preço</label>
+          <input type="number" id="fReclPreco" min="0" step="1" placeholder="0">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Atendimento</label>
+          <input type="number" id="fReclAtendimento" min="0" step="1" placeholder="0">
+        </div>
+        <div class="field">
+          <label>Propaganda enganosa</label>
+          <input type="number" id="fReclPropaganda" min="0" step="1" placeholder="0">
+        </div>
+      </div>
+      <div class="field">
+        <label>Qualidade do veículo</label>
+        <input type="number" id="fReclQualidade" min="0" step="1" placeholder="0">
       </div>
 
       <div class="field">
@@ -408,6 +446,30 @@
       <label>Cliques no website</label>
       <input type="number" id="eCliquesWebsite" min="0" step="1">
     </div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Recl. Abordagem</label>
+        <input type="number" id="eReclAbordagem" min="0" step="1">
+      </div>
+      <div class="field">
+        <label>Recl. Preço</label>
+        <input type="number" id="eReclPreco" min="0" step="1">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Recl. Atendimento</label>
+        <input type="number" id="eReclAtendimento" min="0" step="1">
+      </div>
+      <div class="field">
+        <label>Recl. Propaganda enganosa</label>
+        <input type="number" id="eReclPropaganda" min="0" step="1">
+      </div>
+    </div>
+    <div class="field">
+      <label>Recl. Qualidade do veículo</label>
+      <input type="number" id="eReclQualidade" min="0" step="1">
+    </div>
     <div class="field">
       <label>Observações</label>
       <textarea id="eObs"></textarea>
@@ -452,6 +514,14 @@
   let lineChart = null;
   let barChart = null;
   const interChartInstances = {};
+  let reclamacoesChart = null;
+  const TIPOS_RECLAMACAO = [
+    {key:'reclAbordagem', label:'Abordagem', color:'#a78bfa'},
+    {key:'reclPreco', label:'Preço', color:'#f97316'},
+    {key:'reclAtendimento', label:'Atendimento', color:'#3b82f6'},
+    {key:'reclPropaganda', label:'Propaganda enganosa', color:'#ff6b4a'},
+    {key:'reclQualidade', label:'Qualidade do veículo', color:'#eab308'}
+  ];
   const METRICAS_INTERACAO = [
     {key:'chamadas', label:'Chamadas', canvas:'chartChamadas'},
     {key:'cliquesChat', label:'Cliques no chat', canvas:'chartChat'},
@@ -550,6 +620,7 @@
     renderBarChart(filtrado);
     renderInteracoesKPIs(filtrado);
     renderInteracoesCharts(filtrado);
+    renderReclamacoesChart(filtrado);
     renderHistorico(all);
   }
 
@@ -755,6 +826,61 @@
     });
   }
 
+  // ---------- RECLAMAÇÕES POR SHOPPING ----------
+  function renderReclamacoesChart(all){
+    const ctx = document.getElementById('chartReclamacoes');
+
+    const totaisPorShop = {};
+    SHOPPINGS.forEach(shop=>{
+      const entries = all.filter(o=>o.shopping===shop);
+      const totais = {};
+      TIPOS_RECLAMACAO.forEach(t=>{
+        totais[t.key] = entries.reduce((s,o)=> s + (o[t.key]||0), 0);
+      });
+      totaisPorShop[shop] = totais;
+    });
+
+    const labels = SHOPPINGS.map(shop=>{
+      const total = TIPOS_RECLAMACAO.reduce((s,t)=> s + totaisPorShop[shop][t.key], 0);
+      return `${shop} (${total})`;
+    });
+
+    const datasets = TIPOS_RECLAMACAO.map(t=>{
+      return {
+        label: t.label,
+        data: SHOPPINGS.map(shop=>{
+          const totais = totaisPorShop[shop];
+          const total = TIPOS_RECLAMACAO.reduce((s,tt)=> s + totais[tt.key], 0);
+          return total > 0 ? +(totais[t.key] / total * 100).toFixed(1) : 0;
+        }),
+        backgroundColor: t.color,
+        borderRadius: 4,
+      };
+    });
+
+    if(reclamacoesChart) reclamacoesChart.destroy();
+    reclamacoesChart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        scales: {
+          x: { stacked:true, min:0, max:100, ticks:{color:'#9a9a92', callback:(v)=>v+'%'}, grid:{display:false} },
+          y: { stacked:true, ticks:{color:'#f5f5f0', font:{size:12}}, grid:{display:false} }
+        },
+        plugins: {
+          legend: { position:'bottom', labels:{color:'#f5f5f0', font:{family:'Inter', size:11}, boxWidth:12} },
+          datalabels: {
+            color:'#0a0a0a',
+            font:{weight:'bold', size:10},
+            formatter: (v)=> v >= 8 ? v.toFixed(0)+'%' : ''
+          }
+        }
+      }
+    });
+  }
+
   // ---------- FORM ----------
   function setupForm(){
     document.getElementById('btnSalvar').addEventListener('click', salvarAfericao);
@@ -777,6 +903,11 @@
     const agendamentos = numOuZero('fAgendamentos');
     const orientacoes = numOuZero('fOrientacoes');
     const cliquesWebsite = numOuZero('fCliquesWebsite');
+    const reclAbordagem = numOuZero('fReclAbordagem');
+    const reclPreco = numOuZero('fReclPreco');
+    const reclAtendimento = numOuZero('fReclAtendimento');
+    const reclPropaganda = numOuZero('fReclPropaganda');
+    const reclQualidade = numOuZero('fReclQualidade');
 
     if(!data){ msg.style.color='var(--bad)'; msg.textContent='Selecione a data.'; return; }
     if(isNaN(notaMedia) || notaMedia < 0 || notaMedia > 5){ msg.style.color='var(--bad)'; msg.textContent='Nota inválida (use de 0 a 5).'; return; }
@@ -789,6 +920,7 @@
       await db.collection(COL).add({
         shopping, data, notaMedia, totalAvaliacoes, obs,
         chamadas, cliquesChat, agendamentos, orientacoes, cliquesWebsite,
+        reclAbordagem, reclPreco, reclAtendimento, reclPropaganda, reclQualidade,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       msg.style.color = 'var(--good)';
@@ -801,6 +933,11 @@
       document.getElementById('fAgendamentos').value = '';
       document.getElementById('fOrientacoes').value = '';
       document.getElementById('fCliquesWebsite').value = '';
+      document.getElementById('fReclAbordagem').value = '';
+      document.getElementById('fReclPreco').value = '';
+      document.getElementById('fReclAtendimento').value = '';
+      document.getElementById('fReclPropaganda').value = '';
+      document.getElementById('fReclQualidade').value = '';
       renderAll();
     }catch(e){
       msg.style.color = 'var(--bad)';
@@ -906,6 +1043,11 @@
     document.getElementById('eAgendamentos').value = o.agendamentos || 0;
     document.getElementById('eOrientacoes').value = o.orientacoes || 0;
     document.getElementById('eCliquesWebsite').value = o.cliquesWebsite || 0;
+    document.getElementById('eReclAbordagem').value = o.reclAbordagem || 0;
+    document.getElementById('eReclPreco').value = o.reclPreco || 0;
+    document.getElementById('eReclAtendimento').value = o.reclAtendimento || 0;
+    document.getElementById('eReclPropaganda').value = o.reclPropaganda || 0;
+    document.getElementById('eReclQualidade').value = o.reclQualidade || 0;
     document.getElementById('eObs').value = o.obs || '';
     document.getElementById('editMsg').textContent = '';
     document.getElementById('editModal').classList.add('show');
@@ -923,6 +1065,11 @@
     const agendamentos = parseInt(document.getElementById('eAgendamentos').value, 10) || 0;
     const orientacoes = parseInt(document.getElementById('eOrientacoes').value, 10) || 0;
     const cliquesWebsite = parseInt(document.getElementById('eCliquesWebsite').value, 10) || 0;
+    const reclAbordagem = parseInt(document.getElementById('eReclAbordagem').value, 10) || 0;
+    const reclPreco = parseInt(document.getElementById('eReclPreco').value, 10) || 0;
+    const reclAtendimento = parseInt(document.getElementById('eReclAtendimento').value, 10) || 0;
+    const reclPropaganda = parseInt(document.getElementById('eReclPropaganda').value, 10) || 0;
+    const reclQualidade = parseInt(document.getElementById('eReclQualidade').value, 10) || 0;
 
     if(isNaN(notaMedia) || notaMedia < 0 || notaMedia > 5){ msg.style.color='var(--bad)'; msg.textContent='Nota inválida.'; return; }
     if(isNaN(totalAvaliacoes) || totalAvaliacoes < 0){ msg.style.color='var(--bad)'; msg.textContent='Total inválido.'; return; }
@@ -932,7 +1079,8 @@
     try{
       await db.collection(COL).doc(editingId).update({
         shopping, data, notaMedia, totalAvaliacoes, obs,
-        chamadas, cliquesChat, agendamentos, orientacoes, cliquesWebsite
+        chamadas, cliquesChat, agendamentos, orientacoes, cliquesWebsite,
+        reclAbordagem, reclPreco, reclAtendimento, reclPropaganda, reclQualidade
       });
       document.getElementById('editModal').classList.remove('show');
       renderAll();
