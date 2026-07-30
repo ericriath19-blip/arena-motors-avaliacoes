@@ -166,6 +166,11 @@
 
   .interacoes-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;}
   .interacoes-grid .chart-wrap{margin-bottom:20px;}
+  .notas-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .notas-grid .chart-wrap{margin-bottom:20px;}
+  @media (max-width:900px){
+    .notas-grid{grid-template-columns:1fr;}
+  }
   .interacoes-kpi.kpi-grid{margin-bottom:16px;}
   .interacoes-kpi .kpi-card{padding:14px;}
   .interacoes-kpi .kpi-nota{font-size:1.5rem;}
@@ -231,13 +236,15 @@
       </select>
     </div>
     <div class="kpi-grid" id="kpiGrid"></div>
-    <div class="chart-wrap">
-      <div class="chart-title">Evolução da nota média por shopping</div>
-      <canvas id="chartLinha" height="90"></canvas>
-    </div>
-    <div class="chart-wrap">
-      <div class="chart-title">Nota atual por shopping (piso de referência: <span id="thresholdLabel">4.5</span>)</div>
-      <canvas id="chartBarra" height="90"></canvas>
+    <div class="notas-grid">
+      <div class="chart-wrap">
+        <div class="chart-title">Evolução da nota média por shopping</div>
+        <canvas id="chartLinha" height="140"></canvas>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-title">Nota atual por shopping (piso de referência: <span id="thresholdLabel">4.5</span>)</div>
+        <canvas id="chartBarra" height="140"></canvas>
+      </div>
     </div>
 
     <h3 style="margin:8px 0 16px;color:var(--gold);font-size:1.1rem;">Interações no Perfil da Empresa (Google)</h3>
