@@ -571,8 +571,7 @@
       }
       const last = entries[entries.length-1];
       const prev = entries.length > 1 ? entries[entries.length-2] : null;
-      const abaixo = last.notaMedia < THRESHOLD;
-      if(abaixo) card.classList.add('abaixo');
+      card.style.borderTopColor = corPorNota(last.notaMedia);
 
       let deltaHtml = '';
       if(prev){
@@ -590,6 +589,12 @@
       `;
       grid.appendChild(card);
     });
+  }
+
+  function corPorNota(nota){
+    if(nota >= 4.5) return 'var(--good)';
+    if(nota >= 3.5) return 'var(--warn)';
+    return 'var(--bad)';
   }
 
   function formatDataBR(dataStr){
