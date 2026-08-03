@@ -216,6 +216,7 @@
   <nav class="tabs">
     <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
     <button class="tab-btn" data-tab="lancar">Lançar Avaliação</button>
+    <button class="tab-btn" data-tab="lancar-reclamacao">Lançar Reclamação</button>
     <button class="tab-btn" data-tab="historico">Histórico</button>
   </nav>
 
@@ -327,33 +328,6 @@
         <input type="number" id="fCliquesWebsite" min="0" step="1" placeholder="0">
       </div>
 
-      <h3 style="margin:26px 0 14px;font-size:1rem;color:var(--gold);">Reclamações</h3>
-      <p style="font-size:.78rem;color:var(--muted);margin:-8px 0 16px;">Quantidade de reclamações por tipo nesse período (opcional, pode deixar em branco).</p>
-      <div class="form-grid">
-        <div class="field">
-          <label>Abordagem</label>
-          <input type="number" id="fReclAbordagem" min="0" step="1" placeholder="0">
-        </div>
-        <div class="field">
-          <label>Preço</label>
-          <input type="number" id="fReclPreco" min="0" step="1" placeholder="0">
-        </div>
-      </div>
-      <div class="form-grid">
-        <div class="field">
-          <label>Atendimento</label>
-          <input type="number" id="fReclAtendimento" min="0" step="1" placeholder="0">
-        </div>
-        <div class="field">
-          <label>Propaganda enganosa</label>
-          <input type="number" id="fReclPropaganda" min="0" step="1" placeholder="0">
-        </div>
-      </div>
-      <div class="field">
-        <label>Qualidade do veículo</label>
-        <input type="number" id="fReclQualidade" min="0" step="1" placeholder="0">
-      </div>
-
       <div class="field">
         <label>Observações</label>
         <textarea id="fObs" placeholder="Ex: avaliação negativa sobre atendimento, resposta pendente..."></textarea>
@@ -363,9 +337,63 @@
     </div>
   </div>
 
+  <!-- LANÇAR RECLAMAÇÃO -->
+  <div class="tabview" id="tab-lancar-reclamacao">
+    <div class="panel">
+      <h3 style="margin-bottom:6px;">Nova reclamação</h3>
+      <p style="font-size:.78rem;color:var(--muted);margin:0 0 18px;">Lançamento independente da aferição de nota — use para registrar histórico de reclamações a qualquer momento, sem precisar de nota ou total de avaliações daquele período.</p>
+      <div class="form-grid">
+        <div class="field">
+          <label>Shopping</label>
+          <select id="rShopping">
+            <option value="Sul">Sul</option>
+            <option value="Leste">Leste</option>
+            <option value="Sto. André">Sto. André</option>
+            <option value="Nações Unidas">Nações Unidas</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Data</label>
+          <input type="date" id="rData">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Abordagem</label>
+          <input type="number" id="rReclAbordagem" min="0" step="1" placeholder="0">
+        </div>
+        <div class="field">
+          <label>Preço</label>
+          <input type="number" id="rReclPreco" min="0" step="1" placeholder="0">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Atendimento</label>
+          <input type="number" id="rReclAtendimento" min="0" step="1" placeholder="0">
+        </div>
+        <div class="field">
+          <label>Propaganda enganosa</label>
+          <input type="number" id="rReclPropaganda" min="0" step="1" placeholder="0">
+        </div>
+      </div>
+      <div class="field">
+        <label>Qualidade do veículo</label>
+        <input type="number" id="rReclQualidade" min="0" step="1" placeholder="0">
+      </div>
+      <div class="field">
+        <label>Observações</label>
+        <textarea id="rObs" placeholder="Ex: cliente reclamou de atraso na entrega, resposta enviada..."></textarea>
+      </div>
+      <button class="primary" id="btnSalvarReclamacao">Salvar reclamação</button>
+      <div id="formReclamacaoMsg"></div>
+    </div>
+  </div>
+
   <!-- HISTORICO -->
   <div class="tabview" id="tab-historico">
     <div class="panel">
+      <h3 style="margin-bottom:16px;">Avaliações</h3>
       <div class="filters">
         <select id="histShopping">
           <option value="">Todos os shoppings</option>
@@ -383,6 +411,28 @@
           <tbody id="histBody"></tbody>
         </table>
         <div class="empty-state" id="histEmpty" style="display:none;">Nenhuma aferição encontrada.</div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:20px;">
+      <h3 style="margin-bottom:16px;">Reclamações</h3>
+      <div class="filters">
+        <select id="histReclShopping">
+          <option value="">Todos os shoppings</option>
+          <option value="Sul">Sul</option>
+          <option value="Leste">Leste</option>
+          <option value="Sto. André">Sto. André</option>
+          <option value="Nações Unidas">Nações Unidas</option>
+        </select>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr><th>Data</th><th>Shopping</th><th>Abord.</th><th>Preço</th><th>Atend.</th><th>Propag.</th><th>Qualid.</th><th>Total</th><th>Obs.</th><th></th></tr>
+          </thead>
+          <tbody id="histReclBody"></tbody>
+        </table>
+        <div class="empty-state" id="histReclEmpty" style="display:none;">Nenhuma reclamação encontrada.</div>
       </div>
     </div>
   </div>
@@ -446,36 +496,65 @@
       <label>Cliques no website</label>
       <input type="number" id="eCliquesWebsite" min="0" step="1">
     </div>
-    <div class="form-grid">
-      <div class="field">
-        <label>Recl. Abordagem</label>
-        <input type="number" id="eReclAbordagem" min="0" step="1">
-      </div>
-      <div class="field">
-        <label>Recl. Preço</label>
-        <input type="number" id="eReclPreco" min="0" step="1">
-      </div>
-    </div>
-    <div class="form-grid">
-      <div class="field">
-        <label>Recl. Atendimento</label>
-        <input type="number" id="eReclAtendimento" min="0" step="1">
-      </div>
-      <div class="field">
-        <label>Recl. Propaganda enganosa</label>
-        <input type="number" id="eReclPropaganda" min="0" step="1">
-      </div>
-    </div>
-    <div class="field">
-      <label>Recl. Qualidade do veículo</label>
-      <input type="number" id="eReclQualidade" min="0" step="1">
-    </div>
     <div class="field">
       <label>Observações</label>
       <textarea id="eObs"></textarea>
     </div>
     <div id="editMsg" style="font-size:.85rem;margin-bottom:10px;"></div>
     <button class="primary" id="btnSalvarEdicao">Salvar alterações</button>
+  </div>
+</div>
+
+<!-- EDIT RECLAMAÇÃO MODAL -->
+<div class="modal-backdrop" id="editReclamacaoModal">
+  <div class="modal">
+    <span class="close-x" id="editReclamacaoModalClose">✕</span>
+    <h3>Editar reclamação</h3>
+    <div class="form-grid" style="margin-top:14px;">
+      <div class="field">
+        <label>Shopping</label>
+        <select id="erShopping">
+          <option value="Sul">Sul</option>
+          <option value="Leste">Leste</option>
+          <option value="Sto. André">Sto. André</option>
+          <option value="Nações Unidas">Nações Unidas</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Data</label>
+        <input type="date" id="erData">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Abordagem</label>
+        <input type="number" id="erReclAbordagem" min="0" step="1">
+      </div>
+      <div class="field">
+        <label>Preço</label>
+        <input type="number" id="erReclPreco" min="0" step="1">
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Atendimento</label>
+        <input type="number" id="erReclAtendimento" min="0" step="1">
+      </div>
+      <div class="field">
+        <label>Propaganda enganosa</label>
+        <input type="number" id="erReclPropaganda" min="0" step="1">
+      </div>
+    </div>
+    <div class="field">
+      <label>Qualidade do veículo</label>
+      <input type="number" id="erReclQualidade" min="0" step="1">
+    </div>
+    <div class="field">
+      <label>Observações</label>
+      <textarea id="erObs"></textarea>
+    </div>
+    <div id="editReclamacaoMsg" style="font-size:.85rem;margin-bottom:10px;"></div>
+    <button class="primary" id="btnSalvarEdicaoReclamacao">Salvar alterações</button>
   </div>
 </div>
 
@@ -496,6 +575,7 @@
   };
   const SENHA = "arenamotors2026";
   const COL = "avaliacoes_google";
+  const COL_RECLAMACOES = "reclamacoes_google";
   const THRESHOLD = 4.5;
 
   firebase.initializeApp(firebaseConfig);
@@ -551,10 +631,13 @@
   function initApp(){
     document.getElementById('thresholdLabel').textContent = THRESHOLD.toFixed(1);
     document.getElementById('fData').value = fmtDate(new Date());
+    document.getElementById('rData').value = fmtDate(new Date());
     setupTabs();
     setupForm();
+    setupFormReclamacao();
     setupHistorico();
     setupEditModal();
+    setupEditReclamacaoModal();
     setupDashboardFiltro();
     renderAll();
   }
@@ -582,9 +665,10 @@
   }
 
   let anosPopulados = false;
-  function popularFiltroAno(all){
+  function popularFiltroAno(all, reclamacoes){
     if(anosPopulados) return;
-    const anos = [...new Set(all.map(o=>o.data.slice(0,4)))].sort();
+    const combinado = all.concat(reclamacoes || []);
+    const anos = [...new Set(combinado.map(o=>o.data.slice(0,4)))].sort();
     if(anos.length === 0) return;
     const sel = document.getElementById('dashAno');
     anos.forEach(ano=>{
@@ -611,17 +695,25 @@
     return snap.docs.map(d=>({id:d.id, ...d.data()}));
   }
 
+  async function fetchAllReclamacoes(){
+    const snap = await db.collection(COL_RECLAMACOES).orderBy('data', 'asc').get();
+    return snap.docs.map(d=>({id:d.id, ...d.data()}));
+  }
+
   async function renderAll(){
     const all = await fetchAll();
-    popularFiltroAno(all);
+    const reclamacoes = await fetchAllReclamacoes();
+    popularFiltroAno(all, reclamacoes);
     const filtrado = filtrarPorMesAno(all);
+    const reclamacoesFiltradas = filtrarPorMesAno(reclamacoes);
     renderKPIs(filtrado);
     renderLineChart(filtrado);
     renderBarChart(filtrado);
     renderInteracoesKPIs(filtrado);
     renderInteracoesCharts(filtrado);
-    renderReclamacoesChart(filtrado);
+    renderReclamacoesChart(reclamacoesFiltradas);
     renderHistorico(all);
+    renderHistoricoReclamacoes(reclamacoes);
   }
 
   // ---------- KPI CARDS ----------
@@ -886,6 +978,49 @@
     document.getElementById('btnSalvar').addEventListener('click', salvarAfericao);
   }
 
+  function setupFormReclamacao(){
+    document.getElementById('btnSalvarReclamacao').addEventListener('click', salvarReclamacao);
+  }
+
+  async function salvarReclamacao(){
+    const msg = document.getElementById('formReclamacaoMsg');
+    const shopping = document.getElementById('rShopping').value;
+    const data = document.getElementById('rData').value;
+    const obs = document.getElementById('rObs').value.trim();
+    const reclAbordagem = numOuZero('rReclAbordagem');
+    const reclPreco = numOuZero('rReclPreco');
+    const reclAtendimento = numOuZero('rReclAtendimento');
+    const reclPropaganda = numOuZero('rReclPropaganda');
+    const reclQualidade = numOuZero('rReclQualidade');
+
+    if(!data){ msg.style.color='var(--bad)'; msg.textContent='Selecione a data.'; return; }
+    const total = reclAbordagem + reclPreco + reclAtendimento + reclPropaganda + reclQualidade;
+    if(total === 0){ msg.style.color='var(--bad)'; msg.textContent='Preencha ao menos um tipo de reclamação.'; return; }
+
+    msg.style.color = 'var(--muted)';
+    msg.textContent = 'Salvando...';
+
+    try{
+      await db.collection(COL_RECLAMACOES).add({
+        shopping, data, obs,
+        reclAbordagem, reclPreco, reclAtendimento, reclPropaganda, reclQualidade,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      msg.style.color = 'var(--good)';
+      msg.textContent = 'Reclamação salva!';
+      document.getElementById('rObs').value = '';
+      document.getElementById('rReclAbordagem').value = '';
+      document.getElementById('rReclPreco').value = '';
+      document.getElementById('rReclAtendimento').value = '';
+      document.getElementById('rReclPropaganda').value = '';
+      document.getElementById('rReclQualidade').value = '';
+      renderAll();
+    }catch(e){
+      msg.style.color = 'var(--bad)';
+      msg.textContent = 'Erro ao salvar: ' + e.message;
+    }
+  }
+
   function numOuZero(id){
     const v = parseInt(document.getElementById(id).value, 10);
     return isNaN(v) ? 0 : v;
@@ -903,11 +1038,6 @@
     const agendamentos = numOuZero('fAgendamentos');
     const orientacoes = numOuZero('fOrientacoes');
     const cliquesWebsite = numOuZero('fCliquesWebsite');
-    const reclAbordagem = numOuZero('fReclAbordagem');
-    const reclPreco = numOuZero('fReclPreco');
-    const reclAtendimento = numOuZero('fReclAtendimento');
-    const reclPropaganda = numOuZero('fReclPropaganda');
-    const reclQualidade = numOuZero('fReclQualidade');
 
     if(!data){ msg.style.color='var(--bad)'; msg.textContent='Selecione a data.'; return; }
     if(isNaN(notaMedia) || notaMedia < 0 || notaMedia > 5){ msg.style.color='var(--bad)'; msg.textContent='Nota inválida (use de 0 a 5).'; return; }
@@ -920,7 +1050,6 @@
       await db.collection(COL).add({
         shopping, data, notaMedia, totalAvaliacoes, obs,
         chamadas, cliquesChat, agendamentos, orientacoes, cliquesWebsite,
-        reclAbordagem, reclPreco, reclAtendimento, reclPropaganda, reclQualidade,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       msg.style.color = 'var(--good)';
@@ -933,11 +1062,6 @@
       document.getElementById('fAgendamentos').value = '';
       document.getElementById('fOrientacoes').value = '';
       document.getElementById('fCliquesWebsite').value = '';
-      document.getElementById('fReclAbordagem').value = '';
-      document.getElementById('fReclPreco').value = '';
-      document.getElementById('fReclAtendimento').value = '';
-      document.getElementById('fReclPropaganda').value = '';
-      document.getElementById('fReclQualidade').value = '';
       renderAll();
     }catch(e){
       msg.style.color = 'var(--bad)';
@@ -948,6 +1072,7 @@
   // ---------- HISTORICO ----------
   function setupHistorico(){
     document.getElementById('histShopping').addEventListener('change', renderAll);
+    document.getElementById('histReclShopping').addEventListener('change', renderAll);
   }
 
   function renderHistorico(all){
@@ -1022,7 +1147,55 @@
     });
   }
 
-  // ---------- EDIT MODAL ----------
+  function renderHistoricoReclamacoes(reclamacoes){
+    const filtro = document.getElementById('histReclShopping').value;
+    let list = reclamacoes.slice().sort((a,b)=> b.data.localeCompare(a.data));
+    if(filtro) list = list.filter(o=>o.shopping === filtro);
+
+    const tbody = document.getElementById('histReclBody');
+    tbody.innerHTML = '';
+    document.getElementById('histReclEmpty').style.display = list.length ? 'none' : 'block';
+
+    list.forEach(o=>{
+      const total = TIPOS_RECLAMACAO.reduce((s,t)=> s + (o[t.key]||0), 0);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${formatDataBR(o.data)}</td>
+        <td><span class="shop-dot" style="background:${SHOP_COLOR[o.shopping]}"></span>${o.shopping}</td>
+        <td>${o.reclAbordagem ?? 0}</td>
+        <td>${o.reclPreco ?? 0}</td>
+        <td>${o.reclAtendimento ?? 0}</td>
+        <td>${o.reclPropaganda ?? 0}</td>
+        <td>${o.reclQualidade ?? 0}</td>
+        <td><strong>${total}</strong></td>
+        <td style="max-width:160px;color:var(--muted);font-size:.8rem;">${o.obs || '—'}</td>
+        <td></td>
+      `;
+      const delTd = tr.children[9];
+      const wrap = document.createElement('div');
+      wrap.className = 'row-actions';
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'btn-edit';
+      editBtn.textContent = 'Editar';
+      editBtn.addEventListener('click', ()=> openEditReclamacaoModal(o));
+      wrap.appendChild(editBtn);
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn-del';
+      delBtn.textContent = 'Excluir';
+      delBtn.addEventListener('click', async ()=>{
+        if(confirm('Excluir esta reclamação?')){
+          await db.collection(COL_RECLAMACOES).doc(o.id).delete();
+          renderAll();
+        }
+      });
+      wrap.appendChild(delBtn);
+      delTd.appendChild(wrap);
+
+      tbody.appendChild(tr);
+    });
+  }
   let editingId = null;
 
   function setupEditModal(){
@@ -1043,11 +1216,6 @@
     document.getElementById('eAgendamentos').value = o.agendamentos || 0;
     document.getElementById('eOrientacoes').value = o.orientacoes || 0;
     document.getElementById('eCliquesWebsite').value = o.cliquesWebsite || 0;
-    document.getElementById('eReclAbordagem').value = o.reclAbordagem || 0;
-    document.getElementById('eReclPreco').value = o.reclPreco || 0;
-    document.getElementById('eReclAtendimento').value = o.reclAtendimento || 0;
-    document.getElementById('eReclPropaganda').value = o.reclPropaganda || 0;
-    document.getElementById('eReclQualidade').value = o.reclQualidade || 0;
     document.getElementById('eObs').value = o.obs || '';
     document.getElementById('editMsg').textContent = '';
     document.getElementById('editModal').classList.add('show');
@@ -1065,11 +1233,6 @@
     const agendamentos = parseInt(document.getElementById('eAgendamentos').value, 10) || 0;
     const orientacoes = parseInt(document.getElementById('eOrientacoes').value, 10) || 0;
     const cliquesWebsite = parseInt(document.getElementById('eCliquesWebsite').value, 10) || 0;
-    const reclAbordagem = parseInt(document.getElementById('eReclAbordagem').value, 10) || 0;
-    const reclPreco = parseInt(document.getElementById('eReclPreco').value, 10) || 0;
-    const reclAtendimento = parseInt(document.getElementById('eReclAtendimento').value, 10) || 0;
-    const reclPropaganda = parseInt(document.getElementById('eReclPropaganda').value, 10) || 0;
-    const reclQualidade = parseInt(document.getElementById('eReclQualidade').value, 10) || 0;
 
     if(isNaN(notaMedia) || notaMedia < 0 || notaMedia > 5){ msg.style.color='var(--bad)'; msg.textContent='Nota inválida.'; return; }
     if(isNaN(totalAvaliacoes) || totalAvaliacoes < 0){ msg.style.color='var(--bad)'; msg.textContent='Total inválido.'; return; }
@@ -1079,10 +1242,61 @@
     try{
       await db.collection(COL).doc(editingId).update({
         shopping, data, notaMedia, totalAvaliacoes, obs,
-        chamadas, cliquesChat, agendamentos, orientacoes, cliquesWebsite,
-        reclAbordagem, reclPreco, reclAtendimento, reclPropaganda, reclQualidade
+        chamadas, cliquesChat, agendamentos, orientacoes, cliquesWebsite
       });
       document.getElementById('editModal').classList.remove('show');
+      renderAll();
+    }catch(e){
+      msg.style.color = 'var(--bad)';
+      msg.textContent = 'Erro ao salvar: ' + e.message;
+    }
+  }
+
+  // ---------- EDIT RECLAMAÇÃO MODAL ----------
+  let editingReclamacaoId = null;
+
+  function setupEditReclamacaoModal(){
+    document.getElementById('editReclamacaoModalClose').addEventListener('click', ()=>{
+      document.getElementById('editReclamacaoModal').classList.remove('show');
+    });
+    document.getElementById('btnSalvarEdicaoReclamacao').addEventListener('click', salvarEdicaoReclamacao);
+  }
+
+  function openEditReclamacaoModal(o){
+    editingReclamacaoId = o.id;
+    document.getElementById('erShopping').value = o.shopping;
+    document.getElementById('erData').value = o.data;
+    document.getElementById('erReclAbordagem').value = o.reclAbordagem || 0;
+    document.getElementById('erReclPreco').value = o.reclPreco || 0;
+    document.getElementById('erReclAtendimento').value = o.reclAtendimento || 0;
+    document.getElementById('erReclPropaganda').value = o.reclPropaganda || 0;
+    document.getElementById('erReclQualidade').value = o.reclQualidade || 0;
+    document.getElementById('erObs').value = o.obs || '';
+    document.getElementById('editReclamacaoMsg').textContent = '';
+    document.getElementById('editReclamacaoModal').classList.add('show');
+  }
+
+  async function salvarEdicaoReclamacao(){
+    const msg = document.getElementById('editReclamacaoMsg');
+    const shopping = document.getElementById('erShopping').value;
+    const data = document.getElementById('erData').value;
+    const obs = document.getElementById('erObs').value.trim();
+    const reclAbordagem = parseInt(document.getElementById('erReclAbordagem').value, 10) || 0;
+    const reclPreco = parseInt(document.getElementById('erReclPreco').value, 10) || 0;
+    const reclAtendimento = parseInt(document.getElementById('erReclAtendimento').value, 10) || 0;
+    const reclPropaganda = parseInt(document.getElementById('erReclPropaganda').value, 10) || 0;
+    const reclQualidade = parseInt(document.getElementById('erReclQualidade').value, 10) || 0;
+
+    if(!data){ msg.style.color='var(--bad)'; msg.textContent='Selecione a data.'; return; }
+
+    msg.style.color = 'var(--muted)';
+    msg.textContent = 'Salvando...';
+    try{
+      await db.collection(COL_RECLAMACOES).doc(editingReclamacaoId).update({
+        shopping, data, obs,
+        reclAbordagem, reclPreco, reclAtendimento, reclPropaganda, reclQualidade
+      });
+      document.getElementById('editReclamacaoModal').classList.remove('show');
       renderAll();
     }catch(e){
       msg.style.color = 'var(--bad)';
